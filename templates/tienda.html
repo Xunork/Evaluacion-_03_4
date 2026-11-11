@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Catálogo Ferretería{% endblock %}
 {% block content %}
-<h1>Catálogo de Productos</h1>
+<div class="sec-head" style="margin-top: 0;">
+  <h1>Catálogo de Productos ({{ productos|length }})</h1>
+  {% if user.is_staff %}
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <a class="btn" href="{% url 'producto_crear' %}">+ Nuevo producto</a>
+    <a class="btn ghost" href="{% url 'panel_admin' %}">Panel de gestión</a>
+  </div>
+  {% endif %}
+</div>
 
 <form class="filters" method="get">
   <input type="text" name="q" placeholder="Buscar por nombre..." value="{{ q }}">
@@ -34,6 +42,13 @@
       <a class="btn" href="{% url 'carrito_agregar' p.id %}">Agregar al carrito</a>
     {% else %}
       <span class="btn disabled">Sin stock</span>
+    {% endif %}
+
+    {% if user.is_staff %}
+    <div style="display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e7ddd1;">
+      <a class="btn ghost" style="padding: 6px 12px; font-size: .84rem;" href="{% url 'producto_editar' p.id %}">Editar</a>
+      <a class="btn danger" style="padding: 6px 12px; font-size: .84rem;" href="{% url 'producto_eliminar' p.id %}">Eliminar</a>
+    </div>
     {% endif %}
   </article>
 {% empty %}

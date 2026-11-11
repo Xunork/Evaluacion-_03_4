@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Confirmar eliminación{% endblock %}
+{% block content %}
+<div class="form">
+  <h1>Eliminar producto</h1>
+  <p>¿Estás seguro de que deseas eliminar el producto <strong>{{ producto.nombre }}</strong> (${{ producto.precio }}) de la base de datos?</p>
+  <p class="hint">Esta acción eliminará el registro de forma permanente y actualizará el catálogo principal.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
+      <button class="btn danger" type="submit">Sí, confirmar eliminación</button>
+      <a class="btn ghost" href="{% url 'tienda' %}">Cancelar y volver al listado</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

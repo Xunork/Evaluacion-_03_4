@@ -16,7 +16,12 @@
       <a href="{% url 'tienda' %}">Catálogo</a>
       <a href="{% url 'carrito' %}">Carrito{% if cart_count %} ({{ cart_count }}){% endif %}</a>
       {% if user.is_authenticated %}
-        <a href="{% url 'mis_pedidos' %}">Mis pedidos</a>
+        {% if user.is_staff %}
+          <a href="{% url 'panel_admin' %}">Panel Admin</a>
+          <a href="{% url 'producto_crear' %}">+ Crear Producto</a>
+        {% else %}
+          <a href="{% url 'mis_pedidos' %}">Mis pedidos</a>
+        {% endif %}
         <span class="user">Hola, {{ user.username }}</span>
         <a href="{% url 'logout' %}">Salir</a>
       {% else %}

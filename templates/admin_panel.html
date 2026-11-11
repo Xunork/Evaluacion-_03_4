@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Panel de Administración{% endblock %}
+{% block content %}
+<div class="sec-head" style="margin-top: 0;">
+  <h1>Panel de Gestión de Productos</h1>
+  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <a class="btn" href="{% url 'producto_crear' %}">+ Nuevo producto</a>
+    <a class="btn ghost" href="{% url 'categorias_admin' %}">Categorías</a>
+    <a class="btn ghost" href="{% url 'tienda' %}">Ver catálogo público</a>
+  </div>
+</div>
+
+<p>Desde este panel puedes agregar, modificar o eliminar productos usando formularios web conectados directamente a la base de datos ({{ productos|length }} productos registrados).</p>
+
+<table class="table">
+  <tr>
+    <th>ID</th>
+    <th>Imagen</th>
+    <th>Nombre</th>
+    <th>Categoría</th>
+    <th>Precio</th>
+    <th>Stock</th>
+    <th>Acciones</th>
+  </tr>
+  {% for p in productos %}
+  <tr>
+    <td>#{{ p.id }}</td>
+    <td>
+      <img src="{{ p.imagen|default:'/static/img/productos/default.svg' }}" alt="{{ p.nombre }}" style="width: 56px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #e7ddd1;">
+    </td>
+    <td><strong><a href="{% url 'detalle' p.id %}">{{ p.nombre }}</a></strong></td>
+    <td>{{ p.categoria.nombre|default:"Sin categoría" }}</td>
+    <td>${{ p.precio }}</td>
+    <td>
+      <span class="stock {% if p.stock == 0 %}out{% elif p.stock <= 10 %}low{% endif %}">
+        {{ p.stock }}
+      </span>
+    </td>
+    <td style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <a class="btn ghost" href="{% url 'producto_editar' p.id %}">Editar</a>
+      <a class="btn danger" href="{% url 'producto_eliminar' p.id %}">Eliminar</a>
+    </td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="7">No hay productos registrados.</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

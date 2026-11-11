@@ -10,7 +10,11 @@
       <div class="cta-row">
         <a class="btn" href="{% url 'tienda' %}">Explorar catálogo</a>
         {% if user.is_authenticated %}
-          <a class="btn ghost light" href="{% url 'carrito' %}">Ir a mi carrito</a>
+          {% if user.is_staff %}
+            <a class="btn ghost light" href="{% url 'panel_admin' %}">Panel de administración</a>
+          {% else %}
+            <a class="btn ghost light" href="{% url 'carrito' %}">Ir a mi carrito</a>
+          {% endif %}
         {% else %}
           <a class="btn ghost light" href="{% url 'login' %}">Ingresar</a>
           <a class="btn ghost light" href="{% url 'registro' %}">Crear cuenta</a>
@@ -90,4 +94,15 @@
   </article>
   {% endfor %}
 </div>
+
+<section class="band">
+  <div>
+    <p class="eyebrow">Administración con Formularios Web</p>
+    <h2>Agrega, edita y elimina productos directamente desde el sitio.</h2>
+  </div>
+  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <a class="btn" href="{% url 'producto_crear' %}">+ Nuevo producto</a>
+    <a class="btn ghost light" href="{% url 'panel_admin' %}">Ir al panel</a>
+  </div>
+</section>
 {% endblock %}

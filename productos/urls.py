@@ -14,4 +14,10 @@ urlpatterns = [
     path("carrito/actualizar/<int:pk>/", views.carrito_actualizar, name="carrito_actualizar"),
     path("checkout/", views.checkout, name="checkout"),
     path("mis-pedidos/", views.mis_pedidos, name="mis_pedidos"),
+    # Rutas Etapa 1: CRUD web con formularios
+    path("panel/", views.panel_admin, name="panel_admin"),
+    path("panel/nuevo/", views.producto_crear, name="producto_crear"),
+    path("panel/editar/<int:pk>/", views.producto_editar, name="producto_editar"),
+    path("panel/eliminar/<int:pk>/", views.producto_eliminar, name="producto_eliminar"),
+    path("panel/categorias/", views.categorias_admin, name="categorias_admin"),
 ]

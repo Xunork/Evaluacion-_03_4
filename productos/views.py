@@ -1,11 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Count
 from .models import Producto, Categoria, Pedido, DetallePedido
-from .forms import RegistroForm
+from .forms import RegistroForm, ProductoForm, CategoriaForm
+
+
+def es_admin(user):
+    return user.is_authenticated and user.is_staff
 
 
 def obtener_carrito(request):
@@ -106,7 +110,7 @@ def vista_registro(request):
 
 def vista_login(request):
     if request.user.is_authenticated:
-        return redirect("tienda")
+        return redirect("panel_admin" if request.user.is_staff else "tienda")
 
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
@@ -117,6 +121,8 @@ def vista_login(request):
             siguiente = request.GET.get("next") or request.POST.get("next")
             if siguiente:
                 return redirect(siguiente)
+            if usuario.is_staff:
+                return redirect("panel_admin")
             return redirect("tienda")
     else:
         form = AuthenticationForm(request)
@@ -201,14 +207,12 @@ def checkout(request):
         messages.error(request, "Tu carrito está vacío.")
         return redirect("carrito")
 
-    # Verificar que todos los productos tengan stock suficiente
     for item in items:
         prod = item["producto"]
         if item["cantidad"] > prod.stock:
             messages.error(request, f"Stock insuficiente para {prod.nombre}.")
             return redirect("carrito")
 
-    # Crear el pedido y descontar stock
     pedido = Pedido.objects.create(usuario=request.user, total=total)
     for item in items:
         prod = item["producto"]
@@ -233,3 +237,106 @@ def mis_pedidos(request):
     pedidos = Pedido.objects.filter(usuario=request.user).prefetch_related("detalles")
     _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
     return render(request, "mis_pedidos.html", {"pedidos": pedidos, "cart_count": cart_count})
+
+
+# ==========================================================
+# ETAPA 1: CRUD DEL CATÁLOGO DESDE LA WEB CON FORMULARIOS
+# ==========================================================
+
+@user_passes_test(es_admin)
+def panel_admin(request):
+    productos = Producto.objects.select_related("categoria").all()
+    _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
+    contexto = {
+        "productos": productos,
+        "cart_count": cart_count,
+    }
+    return render(request, "admin_panel.html", contexto)
+
+
+@user_passes_test(es_admin)
+def producto_crear(request):
+    if request.method == "POST":
+        form = ProductoForm(request.POST)
+        if form.is_valid():
+            nuevo_producto = form.save(commit=False)
+            if not nuevo_producto.imagen:
+                nuevo_producto.imagen = "/static/img/productos/default.svg"
+            nuevo_producto.save()
+            messages.success(request, f"Producto '{nuevo_producto.nombre}' creado correctamente.")
+            return redirect("tienda")
+    else:
+        form = ProductoForm()
+
+    _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
+    contexto = {
+        "form": form,
+        "titulo": "Crear nuevo producto",
+        "cart_count": cart_count,
+    }
+    return render(request, "producto_form.html", contexto)
+
+
+@user_passes_test(es_admin)
+def producto_editar(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+
+    if request.method == "POST":
+        form = ProductoForm(request.POST, instance=producto)
+        if form.is_valid():
+            prod_editado = form.save(commit=False)
+            if not prod_editado.imagen:
+                prod_editado.imagen = "/static/img/productos/default.svg"
+            prod_editado.save()
+            messages.success(request, f"Producto '{prod_editado.nombre}' actualizado correctamente.")
+            return redirect("tienda")
+    else:
+        form = ProductoForm(instance=producto)
+
+    _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
+    contexto = {
+        "form": form,
+        "titulo": f"Editar producto: {producto.nombre}",
+        "producto": producto,
+        "cart_count": cart_count,
+    }
+    return render(request, "producto_form.html", contexto)
+
+
+@user_passes_test(es_admin)
+def producto_eliminar(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+
+    if request.method == "POST":
+        nombre = producto.nombre
+        producto.delete()
+        messages.success(request, f"Producto '{nombre}' eliminado correctamente.")
+        return redirect("tienda")
+
+    _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
+    contexto = {
+        "producto": producto,
+        "cart_count": cart_count,
+    }
+    return render(request, "producto_confirmar.html", contexto)
+
+
+@user_passes_test(es_admin)
+def categorias_admin(request):
+    if request.method == "POST":
+        form = CategoriaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Categoría creada correctamente.")
+            return redirect("categorias_admin")
+    else:
+        form = CategoriaForm()
+
+    categorias = Categoria.objects.annotate(total_prod=Count("productos")).all()
+    _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
+    contexto = {
+        "categorias": categorias,
+        "form": form,
+        "cart_count": cart_count,
+    }
+    return render(request, "categorias.html", contexto)

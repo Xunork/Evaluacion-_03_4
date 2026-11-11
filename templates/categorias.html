@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Categorías{% endblock %}
+{% block content %}
+<div class="sec-head" style="margin-top: 0;">
+  <h1>Categorías del Catálogo</h1>
+  <a class="btn ghost" href="{% url 'panel_admin' %}">← Volver al panel</a>
+</div>
+
+<div class="form" style="margin-bottom: 28px;">
+  <h3>Agregar nueva categoría</h3>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn" type="submit">Guardar categoría</button>
+  </form>
+</div>
+
+<table class="table">
+  <tr>
+    <th>ID</th>
+    <th>Nombre</th>
+    <th>Descripción</th>
+    <th>Productos asociados</th>
+  </tr>
+  {% for c in categorias %}
+  <tr>
+    <td>#{{ c.id }}</td>
+    <td><strong>{{ c.nombre }}</strong></td>
+    <td>{{ c.descripcion|default:"-" }}</td>
+    <td>{{ c.total_prod }} productos</td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="4">No hay categorías registradas.</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
