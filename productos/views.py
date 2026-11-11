@@ -4,8 +4,8 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Count, Avg, Sum
-from .models import Producto, Categoria, Pedido, DetallePedido
-from .forms import RegistroForm, ProductoForm, CategoriaForm
+from .models import Producto, Categoria, Pedido, DetallePedido, ConsultaCliente
+from .forms import RegistroForm, ProductoForm, CategoriaForm, ConsultaClienteForm
 
 
 def es_admin(user):
@@ -56,7 +56,21 @@ def landing(request):
     return render(request, "landing.html", contexto)
 
 
+def obtener_ultimos_visitados(request):
+    ids_visitados = request.session.get("ultimos_visitados", [])
+    productos_visitados = []
+    for prod_id in ids_visitados:
+        prod = Producto.objects.filter(id=prod_id).first()
+        if prod:
+            productos_visitados.append(prod)
+    return productos_visitados
+
+
 def tienda(request):
+    # Contador de visitas al catálogo guardado en sesión
+    visitas = request.session.get("visitas_catalogo", 0) + 1
+    request.session["visitas_catalogo"] = visitas
+
     q = request.GET.get("q", "").strip()
     cat_id = request.GET.get("categoria", "")
     cat_activa = int(cat_id) if cat_id.isdigit() else 0
@@ -69,6 +83,7 @@ def tienda(request):
 
     categorias = Categoria.objects.all()
     _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
+    ultimos_visitados = obtener_ultimos_visitados(request)
 
     contexto = {
         "productos": productos,
@@ -76,17 +91,31 @@ def tienda(request):
         "cat_activa": cat_activa,
         "q": q,
         "cart_count": cart_count,
+        "visitas_catalogo": visitas,
+        "ultimos_visitados": ultimos_visitados,
     }
     return render(request, "tienda.html", contexto)
 
 
 def detalle(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
+
+    # Guardar en sesión los últimos 3 productos visitados
+    visitados = request.session.get("ultimos_visitados", [])
+    if pk in visitados:
+        visitados.remove(pk)
+    visitados.insert(0, pk)
+    visitados = visitados[:3]
+    request.session["ultimos_visitados"] = visitados
+    request.session.modified = True
+
     _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
+    ultimos_visitados = obtener_ultimos_visitados(request)
 
     contexto = {
         "producto": producto,
         "cart_count": cart_count,
+        "ultimos_visitados": ultimos_visitados,
     }
     return render(request, "detalle.html", contexto)
 
@@ -403,4 +432,40 @@ def reporte_critico(request):
         "cart_count": cart_count,
     }
     return render(request, "reporte_critico.html", contexto)
+
+
+# ==========================================================
+# ETAPA 3: FORMULARIO DE CLIENTES (MODELFORM) Y SESIONES
+# ==========================================================
+
+def consultas_clientes(request):
+    producto_id = request.GET.get("producto", "")
+
+    if request.method == "POST":
+        form = ConsultaClienteForm(request.POST)
+        if form.is_valid():
+            consulta = form.save()
+            messages.success(
+                request,
+                f"¡Gracias {consulta.nombre}! Tu consulta fue guardada en la base de datos correctamente."
+            )
+            return redirect("consultas")
+    else:
+        datos_iniciales = {}
+        if producto_id.isdigit():
+            datos_iniciales["producto_interes"] = int(producto_id)
+        form = ConsultaClienteForm(initial=datos_iniciales)
+
+    consultas = ConsultaCliente.objects.select_related("producto_interes").all()[:10]
+    _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
+    ultimos_visitados = obtener_ultimos_visitados(request)
+
+    contexto = {
+        "form": form,
+        "consultas": consultas,
+        "cart_count": cart_count,
+        "ultimos_visitados": ultimos_visitados,
+    }
+    return render(request, "consultas.html", contexto)
+
 

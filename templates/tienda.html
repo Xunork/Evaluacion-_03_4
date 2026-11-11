@@ -3,13 +3,27 @@
 {% block content %}
 <div class="sec-head" style="margin-top: 0;">
   <h1>Catálogo de Productos ({{ productos|length }})</h1>
-  {% if user.is_staff %}
-  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-    <a class="btn" href="{% url 'producto_crear' %}">+ Nuevo producto</a>
-    <a class="btn ghost" href="{% url 'panel_admin' %}">Panel de gestión</a>
+  <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+    <span class="cat" style="margin: 0;">Visitas en esta sesión: {{ visitas_catalogo }}</span>
+    {% if user.is_staff %}
+      <a class="btn" href="{% url 'producto_crear' %}">+ Nuevo producto</a>
+      <a class="btn ghost" href="{% url 'panel_admin' %}">Panel de gestión</a>
+    {% endif %}
   </div>
-  {% endif %}
 </div>
+
+{% if ultimos_visitados %}
+<div class="order" style="margin-bottom: 20px; background: #fffdfb;">
+  <strong>🕒 Últimos 3 productos visitados en tu sesión:</strong>
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
+    {% for v in ultimos_visitados %}
+      <a class="btn ghost" style="padding: 6px 12px; font-size: .86rem;" href="{% url 'detalle' v.id %}">
+        {{ v.nombre }} (${{ v.precio }})
+      </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 
 <form class="filters" method="get">
   <input type="text" name="q" placeholder="Buscar por nombre..." value="{{ q }}">

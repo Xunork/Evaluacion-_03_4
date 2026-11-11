@@ -64,3 +64,24 @@ class DetallePedido(models.Model):
 
     def __str__(self):
         return f"{self.nombre_producto} x{self.cantidad}"
+
+
+class ConsultaCliente(models.Model):
+    nombre = models.CharField(max_length=100)
+    correo = models.EmailField()
+    mensaje = models.TextField()
+    producto_interes = models.ForeignKey(
+        Producto,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="consultas"
+    )
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        return f"{self.nombre} ({self.correo}) - {self.fecha.strftime('%d/%m/%Y %H:%M')}"
+

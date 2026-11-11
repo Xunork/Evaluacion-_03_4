@@ -16,6 +16,7 @@
       <a href="{% url 'tienda' %}">Catálogo</a>
       <a href="{% url 'reporte_resumen' %}">Reporte Categorías</a>
       <a href="{% url 'reporte_critico' %}">Stock Crítico</a>
+      <a href="{% url 'consultas' %}">Consultas</a>
       <a href="{% url 'carrito' %}">Carrito{% if cart_count %} ({{ cart_count }}){% endif %}</a>
       {% if user.is_authenticated %}
         {% if user.is_staff %}

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Producto, Categoria
+from .models import Producto, Categoria, ConsultaCliente
 
 
 class RegistroForm(UserCreationForm):
@@ -50,3 +50,45 @@ class CategoriaForm(forms.ModelForm):
         widgets = {
             "descripcion": forms.Textarea(attrs={"rows": 2}),
         }
+
+
+class ConsultaClienteForm(forms.ModelForm):
+    class Meta:
+        model = ConsultaCliente
+        fields = ["nombre", "correo", "producto_interes", "mensaje"]
+        labels = {
+            "nombre": "Tu nombre completo",
+            "correo": "Correo electrónico",
+            "producto_interes": "Producto de interés (opcional)",
+            "mensaje": "Mensaje o consulta",
+        }
+        widgets = {
+            "nombre": forms.TextInput(attrs={"placeholder": "Ej: Juan Pérez (mínimo 3 caracteres)"}),
+            "correo": forms.EmailInput(attrs={"placeholder": "ejemplo@correo.cl"}),
+            "mensaje": forms.Textarea(attrs={"rows": 4, "placeholder": "Escribe tu consulta (mínimo 10 caracteres)..."}),
+        }
+        error_messages = {
+            "nombre": {
+                "required": "El nombre es obligatorio.",
+            },
+            "correo": {
+                "required": "El correo electrónico es obligatorio.",
+                "invalid": "Ingresa un correo electrónico válido (ejemplo@dominio.cl).",
+            },
+            "mensaje": {
+                "required": "El mensaje de la consulta es obligatorio.",
+            },
+        }
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get("nombre", "").strip()
+        if len(nombre) < 3:
+            raise forms.ValidationError("El nombre debe tener al menos 3 caracteres.")
+        return nombre
+
+    def clean_mensaje(self):
+        mensaje = self.cleaned_data.get("mensaje", "").strip()
+        if len(mensaje) < 10:
+            raise forms.ValidationError("El mensaje debe tener al menos 10 caracteres.")
+        return mensaje
+

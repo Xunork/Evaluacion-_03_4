@@ -23,4 +23,6 @@ urlpatterns = [
     # Rutas Etapa 2: Reportes con ORM
     path("reporte-resumen/", views.reporte_resumen, name="reporte_resumen"),
     path("reporte-critico/", views.reporte_critico, name="reporte_critico"),
+    # Ruta Etapa 3: Formulario de consultas de clientes
+    path("consultas/", views.consultas_clientes, name="consultas"),
 ]

@@ -21,6 +21,7 @@
       {% else %}
         <span class="btn disabled">Sin stock</span>
       {% endif %}
+      <a class="btn ghost" href="{% url 'consultas' %}?producto={{ producto.id }}">Consultar por este producto</a>
       {% if user.is_staff %}
         <a class="btn ghost" href="{% url 'producto_editar' producto.id %}">Editar producto</a>
         <a class="btn danger" href="{% url 'producto_eliminar' producto.id %}">Eliminar producto</a>
@@ -28,4 +29,22 @@
     </div>
   </div>
 </div>
+
+{% if ultimos_visitados %}
+<div class="sec-head">
+  <h2>Últimos 3 productos visitados (Sesión)</h2>
+</div>
+<div class="grid">
+  {% for v in ultimos_visitados %}
+  <article class="card">
+    <a href="{% url 'detalle' v.id %}" class="thumb">
+      <img class="prod-img" src="{{ v.imagen|default:'/static/img/productos/default.svg' }}" alt="{{ v.nombre }}">
+    </a>
+    <h3><a href="{% url 'detalle' v.id %}">{{ v.nombre }}</a></h3>
+    <p class="cat">{{ v.categoria.nombre|default:"Sin categoría" }}</p>
+    <p class="price">${{ v.precio }}</p>
+  </article>
+  {% endfor %}
+</div>
+{% endif %}
 {% endblock %}
