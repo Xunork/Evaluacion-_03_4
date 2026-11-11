@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Mis Pedidos{% endblock %}
+{% block content %}
+<h1>Mis pedidos realizados</h1>
+{% for ped in pedidos %}
+  <div class="order">
+    <strong>Pedido #{{ ped.id }}</strong> · Fecha: {{ ped.fecha|date:"d/m/Y H:i" }} · <strong>Total: ${{ ped.total }}</strong>
+    <ul>
+      {% for d in ped.detalles.all %}
+        <li>{{ d.nombre_producto }} x{{ d.cantidad }} — ${{ d.precio_unitario }} c/u</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% empty %}
+  <p>Aún no has realizado compras. <a class="btn ghost" href="{% url 'tienda' %}">Ir al catálogo</a></p>
+{% endfor %}
+{% endblock %}

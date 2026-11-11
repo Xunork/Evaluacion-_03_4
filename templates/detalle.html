@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ producto.nombre }}{% endblock %}
+{% block content %}
+<a class="btn ghost" href="{% url 'tienda' %}">← Volver al catálogo</a>
+
+<div class="detail">
+  <div class="thumb big">
+    <img class="prod-img" src="{{ producto.imagen|default:'/static/img/productos/default.svg' }}" alt="{{ producto.nombre }}">
+  </div>
+  <div>
+    <h1>{{ producto.nombre }}</h1>
+    <p class="cat">{{ producto.categoria.nombre|default:"Sin categoría" }}</p>
+    <p>{{ producto.descripcion|default:"Sin descripción." }}</p>
+    <p class="price big">${{ producto.precio }}</p>
+    <p class="stock {% if producto.stock == 0 %}out{% elif producto.stock <= 10 %}low{% endif %}">
+      Stock disponible: {{ producto.stock }} unidades
+    </p>
+    {% if producto.stock > 0 %}
+      <a class="btn" href="{% url 'carrito_agregar' producto.id %}">Agregar al carrito</a>
+    {% else %}
+      <span class="btn disabled">Sin stock</span>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

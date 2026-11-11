@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Carrito de Compras{% endblock %}
+{% block content %}
+<h1>Carrito de compras</h1>
+{% if items %}
+<table class="table">
+  <tr>
+    <th>Producto</th>
+    <th>Precio unitario</th>
+    <th>Cantidad</th>
+    <th>Subtotal</th>
+    <th>Acción</th>
+  </tr>
+  {% for it in items %}
+  <tr>
+    <td><strong>{{ it.producto.nombre }}</strong></td>
+    <td>${{ it.producto.precio }}</td>
+    <td>
+      <form class="inline" method="post" action="{% url 'carrito_actualizar' it.producto.id %}">
+        {% csrf_token %}
+        <input type="number" name="cantidad" value="{{ it.cantidad }}" min="0" max="{{ it.producto.stock }}">
+        <button type="submit">Actualizar</button>
+      </form>
+      <small> (Stock: {{ it.producto.stock }})</small>
+    </td>
+    <td><strong>${{ it.subtotal }}</strong></td>
+    <td><a class="btn danger" href="{% url 'carrito_quitar' it.producto.id %}">Quitar</a></td>
+  </tr>
+  {% endfor %}
+</table>
+
+<p class="total">Total a pagar: ${{ total }}</p>
+
+{% if user.is_authenticated %}
+  <form method="post" action="{% url 'checkout' %}" onsubmit="return confirm('¿Confirmar compra? Se descontará el stock.')">
+    {% csrf_token %}
+    <button class="btn" type="submit">Finalizar compra</button>
+  </form>
+{% else %}
+  <p><a class="btn" href="{% url 'login' %}?next=/carrito/">Inicia sesión para finalizar la compra</a></p>
+{% endif %}
+{% else %}
+  <p>Tu carrito está vacío. <a class="btn ghost" href="{% url 'tienda' %}">Explorar productos</a></p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Ingresar{% endblock %}
+{% block content %}
+<div class="auth">
+  <h1>Iniciar sesión</h1>
+  <p class="hint">Cuentas de prueba — Admin: <b>admin / admin123</b> · Cliente: <b>cliente / cliente123</b></p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
+    <button class="btn" type="submit">Entrar</button>
+  </form>
+  <p>¿No tienes cuenta? <a href="{% url 'registro' %}">Regístrate aquí</a></p>
+</div>
+{% endblock %}

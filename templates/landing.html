@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Ferretería El Martillo · Inicio{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <p class="eyebrow">Ferretería · Catálogo online</p>
+      <h1>Todo para construir, reparar y mejorar.</h1>
+      <p class="hero-sub">Herramientas, fijaciones, pinturas, electricidad y plomería con calidad profesional, precios claros y compra rápida desde nuestro catálogo conectado a base de datos.</p>
+      <div class="cta-row">
+        <a class="btn" href="{% url 'tienda' %}">Explorar catálogo</a>
+        {% if user.is_authenticated %}
+          <a class="btn ghost light" href="{% url 'carrito' %}">Ir a mi carrito</a>
+        {% else %}
+          <a class="btn ghost light" href="{% url 'login' %}">Ingresar</a>
+          <a class="btn ghost light" href="{% url 'registro' %}">Crear cuenta</a>
+        {% endif %}
+      </div>
+      <div class="stats">
+        <div><strong>{{ total_productos }}</strong><span>productos en BD</span></div>
+        <div><strong>{{ categorias|length }}</strong><span>categorías</span></div>
+        <div><strong>24h</strong><span>atención online</span></div>
+      </div>
+    </div>
+
+    <div class="hero-panel">
+      <div class="status-card">
+        <span class="mini-tag">Stock en línea</span>
+        <h3>Productos de confianza para cada proyecto</h3>
+        <ul class="check-list">
+          <li>Materiales y herramientas de primera calidad</li>
+          <li>Stock actualizado en tiempo real</li>
+          <li>Compra rápida con carrito de compras</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feature-grid">
+  <article class="feature-card">
+    <div class="feature-icon">⚙️</div>
+    <h3>Herramientas profesionales</h3>
+    <p>Todo lo que necesitas para bricolaje, construcción y mantenimiento del hogar.</p>
+  </article>
+  <article class="feature-card">
+    <div class="feature-icon">🧱</div>
+    <h3>Materiales de obra</h3>
+    <p>Fijaciones, pinturas, electricidad y gasfitería para proyectos grandes o pequeños.</p>
+  </article>
+  <article class="feature-card">
+    <div class="feature-icon">🚚</div>
+    <h3>Compra directa</h3>
+    <p>Agrega tus productos al carrito, gestiona cantidades y confirma tu pedido fácilmente.</p>
+  </article>
+</section>
+
+<div class="sec-head">
+  <h2>Categorías disponibles</h2>
+  <a href="{% url 'tienda' %}">Ver todo el catálogo →</a>
+</div>
+<div class="cat-grid">
+  {% for c in categorias %}
+  <a class="cat-card" href="{% url 'tienda' %}?categoria={{ c.id }}">
+    <div>
+      <strong>{{ c.nombre }}</strong>
+      <span>{{ c.n }} productos</span>
+    </div>
+    <span class="arrow">→</span>
+  </a>
+  {% endfor %}
+</div>
+
+<div class="sec-head">
+  <h2>Productos destacados</h2>
+  <a href="{% url 'tienda' %}">Ver los {{ total_productos }} productos →</a>
+</div>
+<div class="grid">
+  {% for p in destacados %}
+  <article class="card">
+    <a href="{% url 'detalle' p.id %}" class="thumb">
+      <img class="prod-img" src="{{ p.imagen|default:'/static/img/productos/default.svg' }}" alt="{{ p.nombre }}">
+    </a>
+    <h3><a href="{% url 'detalle' p.id %}">{{ p.nombre }}</a></h3>
+    <p class="cat">{{ p.categoria.nombre|default:"Sin categoría" }}</p>
+    <p class="desc">{{ p.descripcion|truncatewords:12 }}</p>
+    <p class="price">${{ p.precio }}</p>
+    <p class="stock">Stock: {{ p.stock }}</p>
+    <a class="btn" href="{% url 'carrito_agregar' p.id %}">Agregar al carrito</a>
+  </article>
+  {% endfor %}
+</div>
+{% endblock %}

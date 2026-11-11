@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Ferretería El Martillo{% endblock %}</title>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="logo" href="{% url 'inicio' %}">🔧 Ferretería <span>El Martillo</span></a>
+    <nav class="nav">
+      <a href="{% url 'inicio' %}">Inicio</a>
+      <a href="{% url 'tienda' %}">Catálogo</a>
+      <a href="{% url 'carrito' %}">Carrito{% if cart_count %} ({{ cart_count }}){% endif %}</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'mis_pedidos' %}">Mis pedidos</a>
+        <span class="user">Hola, {{ user.username }}</span>
+        <a href="{% url 'logout' %}">Salir</a>
+      {% else %}
+        <a href="{% url 'login' %}">Ingresar</a>
+        <a class="btn-small" href="{% url 'registro' %}">Registrarse</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  {% if messages %}
+    <div class="msgs">
+      {% for m in messages %}<p class="msg">{{ m }}</p>{% endfor %}
+    </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="foot">
+  <div class="wrap">Ferretería El Martillo · Evaluación Sumativa 3 (TI3041) · admin / admin123 · cliente / cliente123</div>
+</footer>
+</body>
+</html>
