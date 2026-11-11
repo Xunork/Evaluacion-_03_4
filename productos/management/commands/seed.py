@@ -1,42 +1,10 @@
-from pathlib import Path
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from productos.models import Categoria, Producto, Pedido
 
 
-PALETA_CATEGORIAS = {
-    "Herramientas": ("#ea580c", "#fed7aa", "🔨"),
-    "Fijaciones": ("#475569", "#e2e8f0", "🔩"),
-    "Pinturas": ("#0284c7", "#bae6fd", "🎨"),
-    "Electricidad": ("#ca8a04", "#fef08a", "⚡"),
-    "Plomería": ("#0d9488", "#99f6e4", "🔧"),
-}
-
-
-def generar_svg_producto(ruta_archivo, nombre, categoria):
-    color_fuerte, color_suave, icono = PALETA_CATEGORIAS.get(
-        categoria, ("#ea580c", "#fed7aa", "🧰")
-    )
-    nombre_corto = nombre[:22] + ("..." if len(nombre) > 22 else "")
-    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="{color_suave}"/>
-      <stop offset="100%" stop-color="#ffffff"/>
-    </linearGradient>
-  </defs>
-  <rect width="320" height="200" rx="16" fill="url(#bg)"/>
-  <circle cx="160" cy="82" r="46" fill="#ffffff" stroke="{color_fuerte}" stroke-width="3"/>
-  <text x="160" y="98" font-size="44" text-anchor="middle" font-family="sans-serif">{icono}</text>
-  <rect x="24" y="142" width="272" height="36" rx="8" fill="{color_fuerte}"/>
-  <text x="160" y="165" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif">{nombre_corto}</text>
-</svg>"""
-    ruta_archivo.write_text(svg, encoding="utf-8")
-
-
 class Command(BaseCommand):
-    help = "Poblamiento inicial ferretería: cuentas genéricas + 40 productos con imágenes (ES3 Sección A)"
+    help = "Poblamiento inicial ferretería: cuentas genéricas + 40 productos con fotografías reales (ES3 Sección A)"
 
     def handle(self, *args, **kwargs):
         if not User.objects.filter(username="admin").exists():
@@ -62,10 +30,6 @@ class Command(BaseCommand):
         Pedido.objects.all().delete()
         Producto.objects.all().delete()
         Categoria.objects.all().delete()
-
-        carpeta_img = Path(settings.BASE_DIR) / "static" / "img" / "productos"
-        carpeta_img.mkdir(parents=True, exist_ok=True)
-        generar_svg_producto(carpeta_img / "default.svg", "Producto Ferretería", "Herramientas")
 
         cats = {
             "Herramientas": "Manuales y eléctricas",
@@ -123,11 +87,9 @@ class Command(BaseCommand):
         indice = 1
         for nombre, desc, precio, stock, cat_nombre in prods:
             cat = Categoria.objects.get(nombre=cat_nombre)
-            nombre_archivo = f"prod_{indice}.svg"
-            generar_svg_producto(carpeta_img / nombre_archivo, nombre, cat_nombre)
-            ruta_web = f"/static/img/productos/{nombre_archivo}"
-
+            ruta_web = f"/static/img/productos/prod_{indice}.jpg"
             Producto.objects.create(
+                id=indice,
                 nombre=nombre,
                 descripcion=desc,
                 precio=precio,
@@ -137,4 +99,4 @@ class Command(BaseCommand):
             )
             indice = indice + 1
 
-        self.stdout.write(self.style.SUCCESS(f"Ferretería lista: {Producto.objects.count()} productos con imágenes."))
+        self.stdout.write(self.style.SUCCESS(f"Ferretería lista: {Producto.objects.count()} productos con fotografías reales."))

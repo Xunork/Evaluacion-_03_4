@@ -5,17 +5,17 @@
 
 <div class="detail">
   <div class="thumb big">
-    <img class="prod-img" src="{{ producto.imagen|default:'/static/img/productos/default.svg' }}" alt="{{ producto.nombre }}">
+    <img class="prod-img" src="{{ producto.imagen|default:'/static/img/productos/default.jpg' }}" alt="{{ producto.nombre }}">
   </div>
   <div>
+    <span class="cat">{{ producto.categoria.nombre|default:"Sin categoría" }}</span>
     <h1>{{ producto.nombre }}</h1>
-    <p class="cat">{{ producto.categoria.nombre|default:"Sin categoría" }}</p>
     <p>{{ producto.descripcion|default:"Sin descripción." }}</p>
     <p class="price big">${{ producto.precio }}</p>
     <p class="stock {% if producto.stock == 0 %}out{% elif producto.stock <= 10 %}low{% endif %}">
-      Stock disponible: {{ producto.stock }} unidades
+      Disponibilidad actual: {{ producto.stock }} unidades
     </p>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
       {% if producto.stock > 0 %}
         <a class="btn" href="{% url 'carrito_agregar' producto.id %}">Agregar al carrito</a>
       {% else %}
@@ -23,8 +23,8 @@
       {% endif %}
       <a class="btn ghost" href="{% url 'consultas' %}?producto={{ producto.id }}">Consultar por este producto</a>
       {% if user.is_staff %}
-        <a class="btn ghost" href="{% url 'producto_editar' producto.id %}">Editar producto</a>
-        <a class="btn danger" href="{% url 'producto_eliminar' producto.id %}">Eliminar producto</a>
+        <a class="btn ghost" href="{% url 'producto_editar' producto.id %}">Editar</a>
+        <a class="btn danger" href="{% url 'producto_eliminar' producto.id %}">Eliminar</a>
       {% endif %}
     </div>
   </div>
@@ -32,16 +32,16 @@
 
 {% if ultimos_visitados %}
 <div class="sec-head">
-  <h2>Últimos 3 productos visitados (Sesión)</h2>
+  <h2>Últimos 3 productos visitados en tu sesión</h2>
 </div>
 <div class="grid">
   {% for v in ultimos_visitados %}
   <article class="card">
     <a href="{% url 'detalle' v.id %}" class="thumb">
-      <img class="prod-img" src="{{ v.imagen|default:'/static/img/productos/default.svg' }}" alt="{{ v.nombre }}">
+      <img class="prod-img" src="{{ v.imagen|default:'/static/img/productos/default.jpg' }}" alt="{{ v.nombre }}">
     </a>
+    <span class="cat">{{ v.categoria.nombre|default:"Sin categoría" }}</span>
     <h3><a href="{% url 'detalle' v.id %}">{{ v.nombre }}</a></h3>
-    <p class="cat">{{ v.categoria.nombre|default:"Sin categoría" }}</p>
     <p class="price">${{ v.precio }}</p>
   </article>
   {% endfor %}

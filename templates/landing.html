@@ -4,37 +4,28 @@
 <section class="hero">
   <div class="hero-inner">
     <div class="hero-copy">
-      <p class="eyebrow">Ferretería · Catálogo online</p>
-      <h1>Todo para construir, reparar y mejorar.</h1>
-      <p class="hero-sub">Herramientas, fijaciones, pinturas, electricidad y plomería con calidad profesional, precios claros y compra rápida desde nuestro catálogo conectado a base de datos.</p>
+      <p class="eyebrow">Ferretería Industrial y Suministros</p>
+      <h1>Herramientas y materiales de precisión para obra y taller.</h1>
+      <p class="hero-sub">Abastecimiento técnico en herramientas manuales y eléctricas, fijaciones estructurales, pinturas, electricidad y gasfitería con disponibilidad inmediata.</p>
       <div class="cta-row">
-        <a class="btn" href="{% url 'tienda' %}">Explorar catálogo</a>
-        {% if user.is_authenticated %}
-          {% if user.is_staff %}
-            <a class="btn ghost light" href="{% url 'panel_admin' %}">Panel de administración</a>
-          {% else %}
-            <a class="btn ghost light" href="{% url 'carrito' %}">Ir a mi carrito</a>
-          {% endif %}
-        {% else %}
-          <a class="btn ghost light" href="{% url 'login' %}">Ingresar</a>
-          <a class="btn ghost light" href="{% url 'registro' %}">Crear cuenta</a>
-        {% endif %}
+        <a class="btn" href="{% url 'tienda' %}">Ver catálogo completo</a>
+        <a class="btn ghost" href="{% url 'consultas' %}">Solicitar cotización o consulta</a>
       </div>
       <div class="stats">
-        <div><strong>{{ total_productos }}</strong><span>productos en BD</span></div>
-        <div><strong>{{ categorias|length }}</strong><span>categorías</span></div>
-        <div><strong>24h</strong><span>atención online</span></div>
+        <div><strong>{{ total_productos }}</strong><span>Productos activos</span></div>
+        <div><strong>{{ categorias|length }}</strong><span>Líneas técnicas</span></div>
+        <div><strong>24h</strong><span>Despacho local</span></div>
       </div>
     </div>
 
     <div class="hero-panel">
       <div class="status-card">
-        <span class="mini-tag">Stock en línea</span>
-        <h3>Productos de confianza para cada proyecto</h3>
+        <span class="mini-tag">Servicio al Cliente</span>
+        <h3>Abastecimiento confiable para cada proyecto</h3>
         <ul class="check-list">
-          <li>Materiales y herramientas de primera calidad</li>
-          <li>Stock actualizado en tiempo real</li>
-          <li>Compra rápida con carrito de compras</li>
+          <li>Herramientas e insumos de grado profesional</li>
+          <li>Disponibilidad de inventario verificada en línea</li>
+          <li>Asesoría técnica directa para obra y mantenimiento</li>
         </ul>
       </div>
     </div>
@@ -43,25 +34,25 @@
 
 <section class="feature-grid">
   <article class="feature-card">
-    <div class="feature-icon">⚙️</div>
-    <h3>Herramientas profesionales</h3>
-    <p>Todo lo que necesitas para bricolaje, construcción y mantenimiento del hogar.</p>
+    <span class="feature-index">01 / HERRAMIENTAS</span>
+    <h3>Equipamiento manual y eléctrico</h3>
+    <p>Selección de herramientas de corte, medición, ajuste y perforación para trabajo continuo.</p>
   </article>
   <article class="feature-card">
-    <div class="feature-icon">🧱</div>
-    <h3>Materiales de obra</h3>
-    <p>Fijaciones, pinturas, electricidad y gasfitería para proyectos grandes o pequeños.</p>
+    <span class="feature-index">02 / OBRA Y TERMINACIONES</span>
+    <h3>Fijaciones, pinturas y recubrimientos</h3>
+    <p>Tornillería calibrada, adhesivos epóxicos, selladores y pinturas de alto rendimiento.</p>
   </article>
   <article class="feature-card">
-    <div class="feature-icon">🚚</div>
-    <h3>Compra directa</h3>
-    <p>Agrega tus productos al carrito, gestiona cantidades y confirma tu pedido fácilmente.</p>
+    <span class="feature-index">03 / INSTALACIONES</span>
+    <h3>Electricidad y gasfitería</h3>
+    <p>Conductores certificados, artefactos eléctricos, válvulas de bronce y accesorios hidráulicos.</p>
   </article>
 </section>
 
 <div class="sec-head">
-  <h2>Categorías disponibles</h2>
-  <a href="{% url 'tienda' %}">Ver todo el catálogo →</a>
+  <h2>Líneas de producto</h2>
+  <a href="{% url 'tienda' %}">Explorar todo el catálogo →</a>
 </div>
 <div class="cat-grid">
   {% for c in categorias %}
@@ -83,13 +74,13 @@
   {% for p in destacados %}
   <article class="card">
     <a href="{% url 'detalle' p.id %}" class="thumb">
-      <img class="prod-img" src="{{ p.imagen|default:'/static/img/productos/default.svg' }}" alt="{{ p.nombre }}">
+      <img class="prod-img" src="{{ p.imagen|default:'/static/img/productos/default.jpg' }}" alt="{{ p.nombre }}">
     </a>
+    <span class="cat">{{ p.categoria.nombre|default:"Sin categoría" }}</span>
     <h3><a href="{% url 'detalle' p.id %}">{{ p.nombre }}</a></h3>
-    <p class="cat">{{ p.categoria.nombre|default:"Sin categoría" }}</p>
     <p class="desc">{{ p.descripcion|truncatewords:12 }}</p>
     <p class="price">${{ p.precio }}</p>
-    <p class="stock">Stock: {{ p.stock }}</p>
+    <p class="stock">Disponible: {{ p.stock }} uds.</p>
     <a class="btn" href="{% url 'carrito_agregar' p.id %}">Agregar al carrito</a>
   </article>
   {% endfor %}
@@ -97,12 +88,12 @@
 
 <section class="band">
   <div>
-    <p class="eyebrow">Administración con Formularios Web</p>
-    <h2>Agrega, edita y elimina productos directamente desde el sitio.</h2>
+    <p class="eyebrow">Atención Especializada</p>
+    <h2>¿Buscas especificaciones técnicas o stock por volumen?</h2>
   </div>
   <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-    <a class="btn" href="{% url 'producto_crear' %}">+ Nuevo producto</a>
-    <a class="btn ghost light" href="{% url 'panel_admin' %}">Ir al panel</a>
+    <a class="btn" href="{% url 'consultas' %}">Contactar a un especialista</a>
+    <a class="btn ghost" href="{% url 'reporte_resumen' %}">Ver resumen de inventario</a>
   </div>
 </section>
 {% endblock %}

@@ -29,7 +29,7 @@ class ProductoForm(forms.ModelForm):
         }
         widgets = {
             "descripcion": forms.Textarea(attrs={"rows": 3, "placeholder": "Descripción breve del producto..."}),
-            "imagen": forms.TextInput(attrs={"placeholder": "/static/img/productos/default.svg o URL https://..."}),
+            "imagen": forms.TextInput(attrs={"placeholder": "/static/img/productos/default.jpg o URL https://..."}),
         }
 
     def clean_precio(self):

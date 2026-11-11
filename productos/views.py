@@ -290,7 +290,7 @@ def producto_crear(request):
         if form.is_valid():
             nuevo_producto = form.save(commit=False)
             if not nuevo_producto.imagen:
-                nuevo_producto.imagen = "/static/img/productos/default.svg"
+                nuevo_producto.imagen = "/static/img/productos/default.jpg"
             nuevo_producto.save()
             messages.success(request, f"Producto '{nuevo_producto.nombre}' creado correctamente.")
             return redirect("tienda")
@@ -315,7 +315,7 @@ def producto_editar(request, pk):
         if form.is_valid():
             prod_editado = form.save(commit=False)
             if not prod_editado.imagen:
-                prod_editado.imagen = "/static/img/productos/default.svg"
+                prod_editado.imagen = "/static/img/productos/default.jpg"
             prod_editado.save()
             messages.success(request, f"Producto '{prod_editado.nombre}' actualizado correctamente.")
             return redirect("tienda")

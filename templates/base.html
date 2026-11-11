@@ -10,26 +10,26 @@
 <body>
 <header class="top">
   <div class="wrap top-inner">
-    <a class="logo" href="{% url 'inicio' %}">🔧 Ferretería <span>El Martillo</span></a>
+    <a class="logo" href="{% url 'inicio' %}">El Martillo <span>/ Ferretería Industrial</span></a>
     <nav class="nav">
       <a href="{% url 'inicio' %}">Inicio</a>
       <a href="{% url 'tienda' %}">Catálogo</a>
-      <a href="{% url 'reporte_resumen' %}">Reporte Categorías</a>
-      <a href="{% url 'reporte_critico' %}">Stock Crítico</a>
-      <a href="{% url 'consultas' %}">Consultas</a>
+      <a href="{% url 'reporte_resumen' %}">Inventario</a>
+      <a href="{% url 'reporte_critico' %}">Reposición</a>
+      <a href="{% url 'consultas' %}">Contacto</a>
       <a href="{% url 'carrito' %}">Carrito{% if cart_count %} ({{ cart_count }}){% endif %}</a>
       {% if user.is_authenticated %}
         {% if user.is_staff %}
-          <a href="{% url 'panel_admin' %}">Panel Admin</a>
-          <a href="{% url 'producto_crear' %}">+ Crear Producto</a>
+          <a href="{% url 'panel_admin' %}">Administración</a>
+          <a href="{% url 'producto_crear' %}">Nuevo Producto</a>
         {% else %}
-          <a href="{% url 'mis_pedidos' %}">Mis pedidos</a>
+          <a href="{% url 'mis_pedidos' %}">Mis Pedidos</a>
         {% endif %}
-        <span class="user">Hola, {{ user.username }}</span>
+        <span class="user">{{ user.username }}</span>
         <a href="{% url 'logout' %}">Salir</a>
       {% else %}
         <a href="{% url 'login' %}">Ingresar</a>
-        <a class="btn-small" href="{% url 'registro' %}">Registrarse</a>
+        <a class="btn-small" href="{% url 'registro' %}">Crear cuenta</a>
       {% endif %}
     </nav>
   </div>
@@ -45,7 +45,7 @@
 </main>
 
 <footer class="foot">
-  <div class="wrap">Ferretería El Martillo · Evaluación Sumativa 3 (TI3041) · admin / admin123 · cliente / cliente123</div>
+  <div class="wrap">Ferretería El Martillo — Suministros Técnicos, Herramientas y Materiales de Obra · Santiago, Chile</div>
 </footer>
 </body>
 </html>

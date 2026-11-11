@@ -1,13 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Registro de Cliente{% endblock %}
+{% block title %}Crear Cuenta · Ferretería El Martillo{% endblock %}
 {% block content %}
 <div class="auth">
-  <h1>Crear cuenta de cliente</h1>
+  <h1>Crear cuenta</h1>
+  <p style="margin-top: 0; margin-bottom: 20px;">Completa tus datos para gestionar tus compras y pedidos en línea.</p>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button class="btn" type="submit">Registrarse</button>
+    <button class="btn" style="width: 100%; margin-top: 6px;" type="submit">Registrarme</button>
   </form>
-  <p>¿Ya tienes cuenta? <a href="{% url 'login' %}">Ingresa aquí</a></p>
+  <p style="margin-top: 18px; margin-bottom: 0; font-size: 0.85rem;">
+    ¿Ya tienes una cuenta? <a href="{% url 'login' %}" style="color: #141413; font-weight: 600;">Iniciar sesión</a>
+  </p>
 </div>
 {% endblock %}

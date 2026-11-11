@@ -22,7 +22,7 @@ class Producto(models.Model):
     imagen = models.CharField(
         max_length=255,
         blank=True,
-        default="/static/img/productos/default.svg",
+        default="/static/img/productos/default.jpg",
         help_text="Ruta o URL de la imagen del producto"
     )
     categoria = models.ForeignKey(

@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Panel de Administración{% endblock %}
+{% block title %}Administración de Catálogo · Ferretería El Martillo{% endblock %}
 {% block content %}
 <div class="sec-head" style="margin-top: 0;">
-  <h1>Panel de Gestión de Productos</h1>
+  <h1>Administración de Catálogo</h1>
   <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-    <a class="btn" href="{% url 'producto_crear' %}">+ Nuevo producto</a>
+    <a class="btn" href="{% url 'producto_crear' %}">Nuevo producto</a>
     <a class="btn ghost" href="{% url 'categorias_admin' %}">Categorías</a>
-    <a class="btn ghost" href="{% url 'tienda' %}">Ver catálogo público</a>
+    <a class="btn ghost" href="{% url 'tienda' %}">Ver catálogo</a>
   </div>
 </div>
 
-<p>Desde este panel puedes agregar, modificar o eliminar productos usando formularios web conectados directamente a la base de datos ({{ productos|length }} productos registrados).</p>
+<p>Control de inventario, precios y fichas de producto ({{ productos|length }} artículos activos).</p>
 
 <table class="table">
   <tr>
@@ -26,7 +26,7 @@
   <tr>
     <td>#{{ p.id }}</td>
     <td>
-      <img src="{{ p.imagen|default:'/static/img/productos/default.svg' }}" alt="{{ p.nombre }}" style="width: 56px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #e7ddd1;">
+      <img src="{{ p.imagen|default:'/static/img/productos/default.jpg' }}" alt="{{ p.nombre }}" style="width: 52px; height: 42px; object-fit: contain; background: #fff; border: 1px solid #dedbd2; padding: 2px;">
     </td>
     <td><strong><a href="{% url 'detalle' p.id %}">{{ p.nombre }}</a></strong></td>
     <td>{{ p.categoria.nombre|default:"Sin categoría" }}</td>
@@ -37,8 +37,8 @@
       </span>
     </td>
     <td style="display: flex; gap: 8px; flex-wrap: wrap;">
-      <a class="btn ghost" href="{% url 'producto_editar' p.id %}">Editar</a>
-      <a class="btn danger" href="{% url 'producto_eliminar' p.id %}">Eliminar</a>
+      <a class="btn ghost" style="padding: 6px 12px; font-size: 0.75rem;" href="{% url 'producto_editar' p.id %}">Editar</a>
+      <a class="btn danger" style="padding: 6px 12px; font-size: 0.75rem;" href="{% url 'producto_eliminar' p.id %}">Eliminar</a>
     </td>
   </tr>
   {% empty %}

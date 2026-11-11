@@ -1,41 +1,41 @@
 {% extends "base.html" %}
-{% block title %}Consultas de Clientes{% endblock %}
+{% block title %}Contacto y Consultas · Ferretería El Martillo{% endblock %}
 {% block content %}
 <div class="sec-head" style="margin-top: 0;">
-  <h1>Contacto y Consultas de Clientes</h1>
+  <h1>Atención al Cliente y Consultas Técnicas</h1>
   <a class="btn ghost" href="{% url 'tienda' %}">← Volver al catálogo</a>
 </div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+<div class="two-col">
   <div class="form" style="max-width: 100%;">
     <h3 style="margin-top: 0;">Envíanos tu consulta</h3>
     <p class="hint">
-      Completa el formulario. Todos los campos marcados son validados en el servidor (nombre mínimo 3 caracteres, correo válido y mensaje mínimo 10 caracteres).
+      Completa tus datos de contacto y el detalle de tu requerimiento. Nuestro equipo responderá a la brevedad.
     </p>
     <form method="post" novalidate>
       {% csrf_token %}
       {{ form.as_p }}
-      <button class="btn" type="submit">Enviar consulta</button>
+      <button class="btn" type="submit">Enviar mensaje</button>
     </form>
   </div>
 
   <div>
-    <h3 style="margin-top: 0;">Últimas consultas registradas en la BD ({{ consultas|length }})</h3>
+    <h3 style="margin-top: 0; margin-bottom: 14px;">Consultas recientes ({{ consultas|length }})</h3>
     {% if consultas %}
       {% for c in consultas %}
       <div class="order">
         <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
           <strong>{{ c.nombre }} ({{ c.correo }})</strong>
-          <small style="color: #6b7280;">{{ c.fecha|date:"d/m/Y H:i" }}</small>
+          <small style="color: #65635d;">{{ c.fecha|date:"d/m/Y H:i" }}</small>
         </div>
         {% if c.producto_interes %}
-          <p class="cat" style="margin: 6px 0;">Producto: {{ c.producto_interes.nombre }}</p>
+          <span class="cat" style="display: block; margin: 6px 0 4px;">Producto: {{ c.producto_interes.nombre }}</span>
         {% endif %}
-        <p style="margin: 6px 0 0;">{{ c.mensaje }}</p>
+        <p style="margin: 6px 0 0; color: #141413;">{{ c.mensaje }}</p>
       </div>
       {% endfor %}
     {% else %}
-      <p>Aún no hay consultas registradas. ¡Sé el primero en escribirnos!</p>
+      <p>Aún no hay consultas registradas.</p>
     {% endif %}
   </div>
 </div>

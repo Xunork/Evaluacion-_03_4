@@ -1,15 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Ingresar{% endblock %}
+{% block title %}Ingresar · Ferretería El Martillo{% endblock %}
 {% block content %}
 <div class="auth">
   <h1>Iniciar sesión</h1>
-  <p class="hint">Cuentas de prueba — Admin: <b>admin / admin123</b> · Cliente: <b>cliente / cliente123</b></p>
+  <p style="margin-top: 0; margin-bottom: 20px;">Ingresa tus credenciales para acceder a tu cuenta.</p>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <input type="hidden" name="next" value="{{ request.GET.next }}">
-    <button class="btn" type="submit">Entrar</button>
+    {% if request.GET.next %}
+      <input type="hidden" name="next" value="{{ request.GET.next }}">
+    {% endif %}
+    <button class="btn" style="width: 100%; margin-top: 6px;" type="submit">Entrar</button>
   </form>
-  <p>¿No tienes cuenta? <a href="{% url 'registro' %}">Regístrate aquí</a></p>
+  <p style="margin-top: 18px; margin-bottom: 0; font-size: 0.85rem;">
+    ¿No tienes una cuenta? <a href="{% url 'registro' %}" style="color: #141413; font-weight: 600;">Crear cuenta</a>
+  </p>
 </div>
 {% endblock %}
