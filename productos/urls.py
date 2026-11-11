@@ -20,4 +20,7 @@ urlpatterns = [
     path("panel/editar/<int:pk>/", views.producto_editar, name="producto_editar"),
     path("panel/eliminar/<int:pk>/", views.producto_eliminar, name="producto_eliminar"),
     path("panel/categorias/", views.categorias_admin, name="categorias_admin"),
+    # Rutas Etapa 2: Reportes con ORM
+    path("reporte-resumen/", views.reporte_resumen, name="reporte_resumen"),
+    path("reporte-critico/", views.reporte_critico, name="reporte_critico"),
 ]

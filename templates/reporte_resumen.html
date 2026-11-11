@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Reporte 1 · Resumen por Categoría{% endblock %}
+{% block content %}
+<div class="sec-head" style="margin-top: 0;">
+  <h1>Reporte 1: Resumen por Categoría (ORM)</h1>
+  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <a class="btn ghost" href="{% url 'reporte_critico' %}">Ver Reporte 2 (Stock Crítico) →</a>
+    <a class="btn ghost" href="{% url 'tienda' %}">Volver al catálogo</a>
+  </div>
+</div>
+
+<p>Este reporte agrupa los productos por categoría usando <code>annotate(Count, Avg, Sum)</code> y obtiene los totales generales usando <code>aggregate()</code> directamente en la vista.</p>
+
+<section class="feature-grid" style="margin-top: 18px;">
+  <article class="feature-card">
+    <p class="cat">Total Productos (Count)</p>
+    <h3 style="font-size: 1.8rem; margin: 6px 0;">{{ total_productos }}</h3>
+    <p>Registros totales en la base de datos.</p>
+  </article>
+  <article class="feature-card">
+    <p class="cat">Precio Promedio (Avg)</p>
+    <h3 style="font-size: 1.8rem; margin: 6px 0;">${{ promedio_general }}</h3>
+    <p>Promedio general de precios del catálogo.</p>
+  </article>
+  <article class="feature-card">
+    <p class="cat">Stock Total (Sum)</p>
+    <h3 style="font-size: 1.8rem; margin: 6px 0;">{{ suma_stock_general }} uds.</h3>
+    <p>Suma de todas las unidades en inventario.</p>
+  </article>
+</section>
+
+<table class="table">
+  <tr>
+    <th>Categoría</th>
+    <th>Cantidad de Productos (Count)</th>
+    <th>Precio Promedio (Avg)</th>
+    <th>Stock Total Acumulado (Sum)</th>
+    <th>Acción</th>
+  </tr>
+  {% for cat in resumen_categorias %}
+  <tr>
+    <td><strong>{{ cat.nombre }}</strong></td>
+    <td>{{ cat.cantidad_productos }} productos</td>
+    <td>${{ cat.precio_promedio_entero }}</td>
+    <td><strong>{{ cat.stock_total }} unidades</strong></td>
+    <td>
+      <a class="btn ghost" style="padding: 6px 12px; font-size: .85rem;" href="{% url 'tienda' %}?categoria={{ cat.id }}">Ver categoría</a>
+    </td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="5">No hay categorías registradas.</td>
+  </tr>
+  {% endfor %}
+  <tr style="background: #fff3e8; font-weight: 800;">
+    <td>TOTAL GENERAL</td>
+    <td>{{ total_productos }} productos</td>
+    <td>${{ promedio_general }} (promedio)</td>
+    <td>{{ suma_stock_general }} unidades</td>
+    <td>-</td>
+  </tr>
+</table>
+{% endblock %}

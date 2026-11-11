@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Reporte 2 · Stock Crítico{% endblock %}
+{% block content %}
+<div class="sec-head" style="margin-top: 0;">
+  <h1>Reporte 2: Productos con Stock Crítico (ORM)</h1>
+  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <a class="btn ghost" href="{% url 'reporte_resumen' %}">← Ver Reporte 1 (Resumen Categorías)</a>
+    <a class="btn ghost" href="{% url 'tienda' %}">Volver al catálogo</a>
+  </div>
+</div>
+
+<p class="hint">
+  Listado filtrado en la vista usando <code>filter(stock__lte={{ umbral }})</code> y ordenado de menor a mayor disponibilidad con <code>order_by('stock', 'nombre')</code>. Se encontraron <strong>{{ total_criticos }} productos</strong> bajo el umbral crítico (stock &le; {{ umbral }}).
+</p>
+
+<table class="table">
+  <tr>
+    <th>Imagen</th>
+    <th>Producto</th>
+    <th>Categoría</th>
+    <th>Precio</th>
+    <th>Stock Actual</th>
+    <th>Acción</th>
+  </tr>
+  {% for p in productos_criticos %}
+  <tr>
+    <td>
+      <img src="{{ p.imagen|default:'/static/img/productos/default.svg' }}" alt="{{ p.nombre }}" style="width: 56px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #e7ddd1;">
+    </td>
+    <td><strong><a href="{% url 'detalle' p.id %}">{{ p.nombre }}</a></strong></td>
+    <td><span class="cat" style="margin: 0;">{{ p.categoria.nombre|default:"Sin categoría" }}</span></td>
+    <td>${{ p.precio }}</td>
+    <td>
+      <span class="stock {% if p.stock == 0 %}out{% else %}low{% endif %}">
+        {{ p.stock }} unidades
+      </span>
+    </td>
+    <td style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <a class="btn ghost" style="padding: 6px 12px; font-size: .85rem;" href="{% url 'detalle' p.id %}">Ver detalle</a>
+      {% if user.is_staff %}
+      <a class="btn" style="padding: 6px 12px; font-size: .85rem;" href="{% url 'producto_editar' p.id %}">Reponer stock</a>
+      {% endif %}
+    </td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="6">No hay productos con stock crítico en este momento.</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

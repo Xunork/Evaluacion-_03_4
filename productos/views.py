@@ -3,7 +3,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.db.models import Count
+from django.db.models import Count, Avg, Sum
 from .models import Producto, Categoria, Pedido, DetallePedido
 from .forms import RegistroForm, ProductoForm, CategoriaForm
 
@@ -340,3 +340,67 @@ def categorias_admin(request):
         "cart_count": cart_count,
     }
     return render(request, "categorias.html", contexto)
+
+
+# ==========================================================
+# ETAPA 2: REPORTES CON CONSULTAS DEL ORM
+# ==========================================================
+
+def reporte_resumen(request):
+    # Reporte 1: Agrupación por categoría usando annotate()
+    resumen_categorias = Categoria.objects.annotate(
+        cantidad_productos=Count("productos"),
+        precio_promedio=Avg("productos__precio"),
+        stock_total=Sum("productos__stock"),
+    ).order_by("nombre")
+
+    # Redondeamos el promedio en la vista para no hacer cálculos en el template
+    for cat in resumen_categorias:
+        if cat.precio_promedio is not None:
+            cat.precio_promedio_entero = int(round(cat.precio_promedio))
+        else:
+            cat.precio_promedio_entero = 0
+        if cat.stock_total is None:
+            cat.stock_total = 0
+
+    # Totales generales del catálogo usando aggregate()
+    totales = Producto.objects.aggregate(
+        total_productos=Count("id"),
+        promedio_general=Avg("precio"),
+        suma_stock_general=Sum("stock"),
+    )
+
+    promedio_general_entero = 0
+    if totales["promedio_general"] is not None:
+        promedio_general_entero = int(round(totales["promedio_general"]))
+
+    _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
+    contexto = {
+        "resumen_categorias": resumen_categorias,
+        "total_productos": totales["total_productos"] or 0,
+        "promedio_general": promedio_general_entero,
+        "suma_stock_general": totales["suma_stock_general"] or 0,
+        "cart_count": cart_count,
+    }
+    return render(request, "reporte_resumen.html", contexto)
+
+
+def reporte_critico(request):
+    # Reporte 2: Listado filtrado bajo umbral de stock crítico usando filter() y order_by()
+    umbral = 10
+    productos_criticos = (
+        Producto.objects.select_related("categoria")
+        .filter(stock__lte=umbral)
+        .order_by("stock", "nombre")
+    )
+    total_criticos = productos_criticos.count()
+
+    _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
+    contexto = {
+        "productos_criticos": productos_criticos,
+        "umbral": umbral,
+        "total_criticos": total_criticos,
+        "cart_count": cart_count,
+    }
+    return render(request, "reporte_critico.html", contexto)
+
