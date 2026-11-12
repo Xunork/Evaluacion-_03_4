@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Registros Globales de Pedidos · Ferretería El Martillo{% endblock %}
+{% block content %}
+<div class="sec-head" style="margin-top: 0;">
+  <h1>Registros Globales de Pedidos y Ventas</h1>
+  <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <form class="excel-bar" method="get" action="{% url 'descargar_excel' %}">
+      <select name="seccion">
+        <option value="ventas" selected>Registro Global de Ventas</option>
+        <option value="stock_general">Stock General (Todo)</option>
+        <option value="resumen_categorias">Resumen por Categorías</option>
+        <option value="stock_critico">Productos en Stock Crítico</option>
+        <optgroup label="Stock por Categoría">
+          {% for c in categorias %}
+            <option value="cat_{{ c.id }}">Categoría: {{ c.nombre }}</option>
+          {% endfor %}
+        </optgroup>
+      </select>
+      <button type="submit">Descargar .xlsx</button>
+    </form>
+    <a class="btn ghost" href="{% url 'panel_admin' %}">← Volver al panel</a>
+  </div>
+</div>
+
+<p>Historial consolidado de todas las compras efectuadas por clientes en la plataforma.</p>
+
+<section class="feature-grid" style="margin-top: 18px;">
+  <article class="feature-card">
+    <span class="cat">Pedidos Procesados</span>
+    <h3 style="font-size: 1.75rem; margin: 6px 0;">{{ total_pedidos }}</h3>
+    <p>Órdenes de compra confirmadas.</p>
+  </article>
+  <article class="feature-card">
+    <span class="cat">Unidades Vendidas</span>
+    <h3 style="font-size: 1.75rem; margin: 6px 0;">{{ total_unidades }} uds.</h3>
+    <p>Total de artículos despachados.</p>
+  </article>
+  <article class="feature-card">
+    <span class="cat">Ingresos Totales</span>
+    <h3 style="font-size: 1.75rem; margin: 6px 0;">${{ ingresos_totales }}</h3>
+    <p>Monto global acumulado en ventas.</p>
+  </article>
+</section>
+
+<table class="table">
+  <tr>
+    <th>N° Pedido</th>
+    <th>Fecha y Hora</th>
+    <th>Cliente</th>
+    <th>Correo</th>
+    <th>Detalle de Productos</th>
+    <th>Total Pagado</th>
+  </tr>
+  {% for ped in pedidos %}
+  <tr>
+    <td><strong>#{{ ped.id }}</strong></td>
+    <td>{{ ped.fecha|date:"d/m/Y H:i" }}</td>
+    <td><strong>{{ ped.usuario.username }}</strong></td>
+    <td>{{ ped.usuario.email|default:"—" }}</td>
+    <td>
+      {% for d in ped.detalles.all %}
+        <div style="font-size: 0.84rem; margin-bottom: 3px;">
+          {{ d.nombre_producto }} × {{ d.cantidad }} (${{ d.precio_unitario }} c/u)
+        </div>
+      {% endfor %}
+    </td>
+    <td><strong>${{ ped.total }}</strong></td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="6">Aún no se registran pedidos en el sistema.</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

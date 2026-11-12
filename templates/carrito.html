@@ -39,14 +39,11 @@
 </table>
 
 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 20px; padding: 20px; background: #fff; border: 1px solid #dfdcd3;">
-  <p class="total" style="margin: 0;">Total a pagar: ${{ total }}</p>
+  <p class="total" style="margin: 0;">Total estimado: ${{ total }}</p>
   {% if user.is_authenticated %}
-    <form method="post" action="{% url 'checkout' %}" onsubmit="return confirm('¿Confirmar pedido?')">
-      {% csrf_token %}
-      <button class="btn" type="submit">Confirmar y finalizar compra</button>
-    </form>
+    <a class="btn" href="{% url 'checkout' %}">Continuar a confirmación de compra →</a>
   {% else %}
-    <a class="btn" href="{% url 'login' %}?next=/carrito/">Inicia sesión para finalizar la compra</a>
+    <a class="btn" href="{% url 'login' %}?next=/checkout/">Inicia sesión para finalizar la compra</a>
   {% endif %}
 </div>
 {% else %}

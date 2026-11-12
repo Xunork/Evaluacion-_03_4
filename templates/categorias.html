@@ -1,9 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Gestión de Categorías{% endblock %}
+{% block title %}Gestión de Categorías · Ferretería El Martillo{% endblock %}
 {% block content %}
 <div class="sec-head" style="margin-top: 0;">
   <h1>Categorías del Catálogo</h1>
-  <a class="btn ghost" href="{% url 'panel_admin' %}">← Volver al panel</a>
+  <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <form class="excel-bar" method="get" action="{% url 'descargar_excel' %}">
+      <select name="seccion">
+        <option value="resumen_categorias">Resumen de Categorías</option>
+        <option value="stock_general">Stock General (Todo)</option>
+        <optgroup label="Stock por Categoría">
+          {% for c in categorias %}
+            <option value="cat_{{ c.id }}">Categoría: {{ c.nombre }} ({{ c.total_prod }})</option>
+          {% endfor %}
+        </optgroup>
+      </select>
+      <button type="submit">Descargar .xlsx</button>
+    </form>
+    <a class="btn ghost" href="{% url 'panel_admin' %}">← Volver al panel</a>
+  </div>
 </div>
 
 <div class="form" style="margin-bottom: 28px;">
@@ -20,7 +34,7 @@
     <th>ID</th>
     <th>Nombre</th>
     <th>Descripción</th>
-    <th>Productos asociados</th>
+    <th>Productos Asociados</th>
   </tr>
   {% for c in categorias %}
   <tr>

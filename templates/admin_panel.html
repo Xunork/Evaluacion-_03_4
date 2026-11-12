@@ -2,15 +2,82 @@
 {% block title %}Administración de Catálogo · Ferretería El Martillo{% endblock %}
 {% block content %}
 <div class="sec-head" style="margin-top: 0;">
-  <h1>Administración de Catálogo</h1>
-  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+  <h1>Panel de Administración General</h1>
+  <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <form class="excel-bar" method="get" action="{% url 'descargar_excel' %}">
+      <select name="seccion">
+        <option value="stock_general">Stock General (Todo)</option>
+        <option value="ventas">Registro Global de Ventas</option>
+        <option value="resumen_categorias">Resumen por Categorías</option>
+        <option value="stock_critico">Productos en Stock Crítico</option>
+        <optgroup label="Stock por Categoría">
+          {% for c in categorias %}
+            <option value="cat_{{ c.id }}">Categoría: {{ c.nombre }} ({{ c.total_prod }})</option>
+          {% endfor %}
+        </optgroup>
+      </select>
+      <button type="submit">Descargar .xlsx</button>
+    </form>
     <a class="btn" href="{% url 'producto_crear' %}">Nuevo producto</a>
+    <a class="btn ghost" href="{% url 'pedidos_admin' %}">Pedidos globales</a>
     <a class="btn ghost" href="{% url 'categorias_admin' %}">Categorías</a>
-    <a class="btn ghost" href="{% url 'tienda' %}">Ver catálogo</a>
   </div>
 </div>
 
-<p>Control de inventario, precios y fichas de producto ({{ productos|length }} artículos activos).</p>
+<section class="feature-grid" style="margin-top: 18px;">
+  <article class="feature-card">
+    <span class="cat">Inventario Activo</span>
+    <h3 style="font-size: 1.65rem; margin: 6px 0;">{{ productos|length }} productos ({{ suma_stock }} uds.)</h3>
+    <p>Referencias activas y disponibilidad total en bodega.</p>
+  </article>
+  <article class="feature-card">
+    <span class="cat">Ventas y Pedidos Globales</span>
+    <h3 style="font-size: 1.65rem; margin: 6px 0;">{{ total_pedidos }} pedidos (${{ ingresos_totales }})</h3>
+    <p>Órdenes confirmadas por los clientes en el sistema.</p>
+  </article>
+  <article class="feature-card">
+    <span class="cat">Líneas de Producto</span>
+    <h3 style="font-size: 1.65rem; margin: 6px 0;">{{ categorias|length }} categorías</h3>
+    <p>Clasificación técnica del inventario actual.</p>
+  </article>
+</section>
+
+<div class="sec-head">
+  <h2>Últimos pedidos registrados ({{ total_pedidos }} en total)</h2>
+  <a href="{% url 'pedidos_admin' %}">Ver todos los registros de pedidos →</a>
+</div>
+
+<table class="table" style="margin-bottom: 36px;">
+  <tr>
+    <th>N° Pedido</th>
+    <th>Fecha</th>
+    <th>Cliente</th>
+    <th>Detalle</th>
+    <th>Total</th>
+  </tr>
+  {% for ped in pedidos_recientes %}
+  <tr>
+    <td><strong>#{{ ped.id }}</strong></td>
+    <td>{{ ped.fecha|date:"d/m/Y H:i" }}</td>
+    <td>{{ ped.usuario.username }}</td>
+    <td>
+      {% for d in ped.detalles.all %}
+        <span>{{ d.nombre_producto }} (×{{ d.cantidad }}){% if not forloop.last %}, {% endif %}</span>
+      {% endfor %}
+    </td>
+    <td><strong>${{ ped.total }}</strong></td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="5">Aún no hay pedidos registrados.</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<div class="sec-head">
+  <h2>Listado General de Productos ({{ productos|length }})</h2>
+  <a href="{% url 'producto_crear' %}">+ Agregar nuevo producto</a>
+</div>
 
 <table class="table">
   <tr>

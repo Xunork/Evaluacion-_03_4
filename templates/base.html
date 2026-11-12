@@ -21,6 +21,7 @@
       {% if user.is_authenticated %}
         {% if user.is_staff %}
           <a href="{% url 'panel_admin' %}">Administración</a>
+          <a href="{% url 'pedidos_admin' %}">Pedidos Globales</a>
           <a href="{% url 'producto_crear' %}">Nuevo Producto</a>
         {% else %}
           <a href="{% url 'mis_pedidos' %}">Mis Pedidos</a>

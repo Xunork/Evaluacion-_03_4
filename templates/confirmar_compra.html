@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Confirmar Compra · Ferretería El Martillo{% endblock %}
+{% block content %}
+<div class="sec-head" style="margin-top: 0;">
+  <h1>Confirmación de Pedido</h1>
+  <a class="btn ghost" href="{% url 'carrito' %}">← Volver al carrito</a>
+</div>
+
+<div class="two-col">
+  <div>
+    <h3 style="margin-top: 0; margin-bottom: 12px;">Resumen de productos a adquirir</h3>
+    <table class="table" style="margin-top: 0;">
+      <tr>
+        <th>Producto</th>
+        <th>Cant.</th>
+        <th>Precio Unit.</th>
+        <th>Subtotal</th>
+      </tr>
+      {% for it in items %}
+      <tr>
+        <td>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="{{ it.producto.imagen|default:'/static/img/productos/default.jpg' }}" alt="{{ it.producto.nombre }}" style="width: 42px; height: 42px; object-fit: contain; background: #fff; border: 1px solid #dedbd2; padding: 2px;">
+            <div>
+              <strong>{{ it.producto.nombre }}</strong>
+              <span class="cat" style="display: block; margin: 2px 0 0;">{{ it.producto.categoria.nombre|default:"General" }}</span>
+            </div>
+          </div>
+        </td>
+        <td>{{ it.cantidad }} uds.</td>
+        <td>${{ it.producto.precio }}</td>
+        <td><strong>${{ it.subtotal }}</strong></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="form" style="max-width: 100%;">
+    <span class="cat">Verificación Final</span>
+    <h3 style="margin: 4px 0 14px; font-size: 1.2rem;">Datos de facturación y despacho</h3>
+
+    <div class="order" style="margin-bottom: 18px; background: #f6f5f0;">
+      <p style="margin: 0 0 6px; color: #141413;"><strong>Cliente:</strong> {{ user.username }}</p>
+      <p style="margin: 0 0 6px; color: #141413;"><strong>Correo registrado:</strong> {{ user.email|default:"No especificado" }}</p>
+      <p style="margin: 0; color: #141413;"><strong>Total de unidades:</strong> {{ cart_count }} artículos</p>
+    </div>
+
+    <p class="hint">
+      Al confirmar esta operación se generará la orden de compra y se descontarán automáticamente las unidades del inventario disponible.
+    </p>
+
+    <div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid #dfdcd3; padding-top: 16px; margin-bottom: 20px;">
+      <span style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Total a pagar</span>
+      <span class="price big" style="margin: 0;">${{ total }}</span>
+    </div>
+
+    <form method="post" action="{% url 'checkout' %}">
+      {% csrf_token %}
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn" style="flex: 1; padding: 12px 18px;" type="submit">Confirmar y realizar pedido</button>
+        <a class="btn ghost" style="padding: 12px 18px;" href="{% url 'carrito' %}">Modificar carrito</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -3,9 +3,24 @@
 {% block content %}
 <div class="sec-head" style="margin-top: 0;">
   <h1>Control de Reposición y Stock Crítico</h1>
-  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-    <a class="btn ghost" href="{% url 'reporte_resumen' %}">← Ver resumen por categoría</a>
-    <a class="btn ghost" href="{% url 'tienda' %}">Volver al catálogo</a>
+  <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <form class="excel-bar" method="get" action="{% url 'descargar_excel' %}">
+      <select name="seccion">
+        <option value="stock_critico" selected>Productos en Stock Crítico</option>
+        <option value="resumen_categorias">Resumen por Categorías</option>
+        <option value="stock_general">Stock General (Todo)</option>
+        {% if user.is_staff %}
+          <option value="ventas">Registro Global de Ventas</option>
+        {% endif %}
+        <optgroup label="Stock por Categoría">
+          {% for c in categorias %}
+            <option value="cat_{{ c.id }}">Categoría: {{ c.nombre }}</option>
+          {% endfor %}
+        </optgroup>
+      </select>
+      <button type="submit">Descargar .xlsx</button>
+    </form>
+    <a class="btn ghost" href="{% url 'reporte_resumen' %}">← Ver resumen</a>
   </div>
 </div>
 

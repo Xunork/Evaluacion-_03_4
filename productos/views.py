@@ -1,4 +1,8 @@
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -226,11 +230,8 @@ def carrito_actualizar(request, pk):
 
 @login_required
 def checkout(request):
-    if request.method != "POST":
-        return redirect("carrito")
-
     carrito = obtener_carrito(request)
-    items, total, _ = calcular_detalle_carrito(carrito)
+    items, total, cantidad_total = calcular_detalle_carrito(carrito)
 
     if not items:
         messages.error(request, "Tu carrito está vacío.")
@@ -242,6 +243,16 @@ def checkout(request):
             messages.error(request, f"Stock insuficiente para {prod.nombre}.")
             return redirect("carrito")
 
+    # Si es GET, mostramos la ventana propia de confirmación de compra
+    if request.method == "GET":
+        contexto = {
+            "items": items,
+            "total": total,
+            "cart_count": cantidad_total,
+        }
+        return render(request, "confirmar_compra.html", contexto)
+
+    # Si es POST, confirmamos el pedido y descontamos stock
     pedido = Pedido.objects.create(usuario=request.user, total=total)
     for item in items:
         prod = item["producto"]
@@ -275,12 +286,50 @@ def mis_pedidos(request):
 @user_passes_test(es_admin)
 def panel_admin(request):
     productos = Producto.objects.select_related("categoria").all()
+    categorias = Categoria.objects.annotate(total_prod=Count("productos")).all()
+    pedidos_recientes = Pedido.objects.select_related("usuario").prefetch_related("detalles").all()[:5]
+
+    totales_ventas = Pedido.objects.aggregate(
+        total_pedidos=Count("id"),
+        ingresos_totales=Sum("total"),
+    )
+    totales_stock = Producto.objects.aggregate(
+        suma_stock=Sum("stock"),
+    )
+
     _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
     contexto = {
         "productos": productos,
+        "categorias": categorias,
+        "pedidos_recientes": pedidos_recientes,
+        "total_pedidos": totales_ventas["total_pedidos"] or 0,
+        "ingresos_totales": totales_ventas["ingresos_totales"] or 0,
+        "suma_stock": totales_stock["suma_stock"] or 0,
         "cart_count": cart_count,
     }
     return render(request, "admin_panel.html", contexto)
+
+
+@user_passes_test(es_admin)
+def pedidos_admin(request):
+    pedidos = Pedido.objects.select_related("usuario").prefetch_related("detalles").all()
+    categorias = Categoria.objects.all()
+    totales_ventas = Pedido.objects.aggregate(
+        total_pedidos=Count("id"),
+        ingresos_totales=Sum("total"),
+    )
+    unidades_vendidas = DetallePedido.objects.aggregate(total_unidades=Sum("cantidad"))
+
+    _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
+    contexto = {
+        "pedidos": pedidos,
+        "categorias": categorias,
+        "total_pedidos": totales_ventas["total_pedidos"] or 0,
+        "ingresos_totales": totales_ventas["ingresos_totales"] or 0,
+        "total_unidades": unidades_vendidas["total_unidades"] or 0,
+        "cart_count": cart_count,
+    }
+    return render(request, "admin_pedidos.html", contexto)
 
 
 @user_passes_test(es_admin)
@@ -427,6 +476,7 @@ def reporte_critico(request):
     _, _, cart_count = calcular_detalle_carrito(obtener_carrito(request))
     contexto = {
         "productos_criticos": productos_criticos,
+        "categorias": Categoria.objects.all(),
         "umbral": umbral,
         "total_criticos": total_criticos,
         "cart_count": cart_count,
@@ -467,5 +517,294 @@ def consultas_clientes(request):
         "ultimos_visitados": ultimos_visitados,
     }
     return render(request, "consultas.html", contexto)
+
+
+# ==========================================================
+# EXPORTACIÓN DIRECTA A ARCHIVO EXCEL (.XLSX) CON DISEÑO Y TOTALES
+# ==========================================================
+
+def generar_respuesta_xls(nombre_archivo, titulo, encabezados, filas, fila_total=None, cols_moneda=None):
+    if cols_moneda is None:
+        cols_moneda = []
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Reporte"
+    ws.views.sheetView[0].showGridLines = True
+
+    num_cols = len(encabezados)
+    ultima_letra = get_column_letter(num_cols)
+
+    # Estilos principales
+    fondo_titulo = PatternFill(start_color="141413", end_color="141413", fill_type="solid")
+    fondo_subtitulo = PatternFill(start_color="EFECE6", end_color="EFECE6", fill_type="solid")
+    fondo_encabezado = PatternFill(start_color="262624", end_color="262624", fill_type="solid")
+    fondo_par = PatternFill(start_color="FAF9F5", end_color="FAF9F5", fill_type="solid")
+    fondo_impar = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+    fondo_total = PatternFill(start_color="EFECE6", end_color="EFECE6", fill_type="solid")
+
+    fuente_titulo = Font(name="Calibri", size=14, bold=True, color="FFFFFF")
+    fuente_sub = Font(name="Calibri", size=10, italic=True, color="4A4945")
+    fuente_encabezado = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    fuente_celda = Font(name="Calibri", size=10, color="141413")
+    fuente_total = Font(name="Calibri", size=11, bold=True, color="141413")
+
+    borde_fino = Side(border_style="thin", color="D4D0C8")
+    borde_grueso_arriba = Side(border_style="medium", color="141413")
+    borde_doble_abajo = Side(border_style="double", color="141413")
+
+    borde_celda = Border(left=borde_fino, right=borde_fino, top=borde_fino, bottom=borde_fino)
+    borde_total = Border(
+        left=borde_fino,
+        right=borde_fino,
+        top=borde_grueso_arriba,
+        bottom=borde_doble_abajo,
+    )
+
+    # Fila 1: Banner de título
+    ws.merge_cells(f"A1:{ultima_letra}1")
+    celda_t1 = ws["A1"]
+    celda_t1.value = f"FERRETERÍA EL MARTILLO — {titulo.upper()}"
+    celda_t1.font = fuente_titulo
+    celda_t1.fill = fondo_titulo
+    celda_t1.alignment = Alignment(horizontal="left", vertical="center", indent=1)
+    ws.row_dimensions[1].height = 30
+
+    # Fila 2: Subtítulo informativo
+    ws.merge_cells(f"A2:{ultima_letra}2")
+    celda_t2 = ws["A2"]
+    celda_t2.value = f"Reporte generado desde el sistema de inventario ({len(filas)} registros incluidos)"
+    celda_t2.font = fuente_sub
+    celda_t2.fill = fondo_subtitulo
+    celda_t2.alignment = Alignment(horizontal="left", vertical="center", indent=1)
+    ws.row_dimensions[2].height = 20
+
+    # Fila 4: Encabezados de la tabla
+    fila_header = 4
+    ws.row_dimensions[fila_header].height = 24
+    for col_idx, texto_col in enumerate(encabezados, start=1):
+        c = ws.cell(row=fila_header, column=col_idx, value=texto_col)
+        c.font = fuente_encabezado
+        c.fill = fondo_encabezado
+        c.border = borde_celda
+        c.alignment = Alignment(horizontal="center", vertical="center")
+
+    # Filas de datos con cebreado (alternancia de color) y bordes de tabla
+    fila_actual = 5
+    for indice_fila, datos_fila in enumerate(filas):
+        ws.row_dimensions[fila_actual].height = 20
+        relleno = fondo_impar if indice_fila % 2 == 0 else fondo_par
+
+        for col_idx, valor in enumerate(datos_fila, start=1):
+            c = ws.cell(row=fila_actual, column=col_idx, value=valor)
+            c.font = fuente_celda
+            c.fill = relleno
+            c.border = borde_celda
+
+            if col_idx in cols_moneda and isinstance(valor, (int, float)):
+                c.number_format = "$#,##0"
+                c.alignment = Alignment(horizontal="right", vertical="center")
+            elif isinstance(valor, (int, float)):
+                c.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                c.alignment = Alignment(horizontal="left", vertical="center")
+
+        fila_actual = fila_actual + 1
+
+    # Fila final de TOTAL GENERAL
+    if fila_total:
+        ws.row_dimensions[fila_actual].height = 24
+        for col_idx, valor in enumerate(fila_total, start=1):
+            c = ws.cell(row=fila_actual, column=col_idx, value=valor)
+            c.font = fuente_total
+            c.fill = fondo_total
+            c.border = borde_total
+
+            if col_idx in cols_moneda and isinstance(valor, (int, float)):
+                c.number_format = "$#,##0"
+                c.alignment = Alignment(horizontal="right", vertical="center")
+            elif isinstance(valor, (int, float)):
+                c.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                c.alignment = Alignment(horizontal="left", vertical="center")
+
+    # Ajustar automáticamente el ancho de cada columna
+    for col_idx in range(1, num_cols + 1):
+        letra = get_column_letter(col_idx)
+        max_largo = len(str(encabezados[col_idx - 1]))
+        for fila_r in range(4, fila_actual + 1):
+            val = ws.cell(row=fila_r, column=col_idx).value
+            if val is not None:
+                texto = f"${val:,.0f}" if (col_idx in cols_moneda and isinstance(val, (int, float))) else str(val)
+                if len(texto) > max_largo:
+                    max_largo = len(texto)
+        ws.column_dimensions[letra].width = max(max_largo + 5, 14)
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="{nombre_archivo}.xlsx"'
+    wb.save(response)
+    return response
+
+
+def descargar_excel(request):
+    seccion = request.GET.get("seccion", "stock_general")
+
+    # 1. Resumen por categorías
+    if seccion == "resumen_categorias":
+        resumen = Categoria.objects.annotate(
+            cantidad_productos=Count("productos"),
+            precio_promedio=Avg("productos__precio"),
+            stock_total=Sum("productos__stock"),
+        ).order_by("nombre")
+
+        encabezados = ["Categoría", "Cantidad de Productos", "Precio Promedio CLP", "Stock Acumulado", "Valorizado Estimado CLP"]
+        filas = []
+        total_prods = 0
+        total_stock = 0
+        total_valorizado = 0
+        suma_promedios = 0
+
+        for cat in resumen:
+            prom = int(round(cat.precio_promedio)) if cat.precio_promedio is not None else 0
+            stock = cat.stock_total or 0
+            valorizado_cat = prom * stock
+            filas.append([cat.nombre, cat.cantidad_productos, prom, stock, valorizado_cat])
+            total_prods = total_prods + cat.cantidad_productos
+            total_stock = total_stock + stock
+            total_valorizado = total_valorizado + valorizado_cat
+            suma_promedios = suma_promedios + prom
+
+        prom_general = int(round(suma_promedios / len(filas))) if filas else 0
+        fila_total = ["TOTAL GENERAL", total_prods, prom_general, total_stock, total_valorizado]
+
+        return generar_respuesta_xls(
+            "reporte_resumen_categorias",
+            "Resumen de Inventario por Categoría",
+            encabezados,
+            filas,
+            fila_total=fila_total,
+            cols_moneda=[3, 5],
+        )
+
+    # 2. Stock crítico
+    if seccion == "stock_critico":
+        productos_criticos = (
+            Producto.objects.select_related("categoria")
+            .filter(stock__lte=10)
+            .order_by("stock", "nombre")
+        )
+        encabezados = ["ID", "Producto", "Categoría", "Precio Unitario CLP", "Stock Actual", "Valorizado CLP", "Estado"]
+        filas = []
+        suma_stock_critico = 0
+        suma_valor_critico = 0
+
+        for p in productos_criticos:
+            nombre_cat = p.categoria.nombre if p.categoria else "Sin categoría"
+            estado = "Sin stock" if p.stock == 0 else "Stock crítico"
+            valorizado = p.precio * p.stock
+            filas.append([p.id, p.nombre, nombre_cat, p.precio, p.stock, valorizado, estado])
+            suma_stock_critico = suma_stock_critico + p.stock
+            suma_valor_critico = suma_valor_critico + valorizado
+
+        fila_total = ["TOTAL", f"{len(filas)} productos en alerta", "—", "—", suma_stock_critico, suma_valor_critico, "—"]
+        return generar_respuesta_xls(
+            "reporte_stock_critico",
+            "Control de Reposición y Stock Crítico",
+            encabezados,
+            filas,
+            fila_total=fila_total,
+            cols_moneda=[4, 6],
+        )
+
+    # 3. Registro global de ventas y pedidos
+    if seccion == "ventas":
+        pedidos = Pedido.objects.select_related("usuario").prefetch_related("detalles").all()
+        encabezados = [
+            "N° Pedido",
+            "Fecha",
+            "Cliente",
+            "Correo",
+            "Producto",
+            "Cantidad",
+            "Precio Unitario CLP",
+            "Subtotal Línea CLP",
+        ]
+        filas = []
+        total_unidades = 0
+        total_ingresos = 0
+
+        for ped in pedidos:
+            fecha_str = ped.fecha.strftime("%d/%m/%Y %H:%M")
+            correo = ped.usuario.email or "-"
+            detalles = ped.detalles.all()
+            if detalles:
+                for d in detalles:
+                    sub = d.subtotal()
+                    filas.append([
+                        f"#{ped.id}",
+                        fecha_str,
+                        ped.usuario.username,
+                        correo,
+                        d.nombre_producto,
+                        d.cantidad,
+                        d.precio_unitario,
+                        sub,
+                    ])
+                    total_unidades = total_unidades + d.cantidad
+                    total_ingresos = total_ingresos + sub
+            else:
+                filas.append([f"#{ped.id}", fecha_str, ped.usuario.username, correo, "-", 0, 0, ped.total])
+                total_ingresos = total_ingresos + ped.total
+
+        fila_total = ["TOTAL VENTAS", f"{pedidos.count()} pedidos", "—", "—", "—", total_unidades, "—", total_ingresos]
+        return generar_respuesta_xls(
+            "registro_global_ventas",
+            "Registro Global de Pedidos y Ventas",
+            encabezados,
+            filas,
+            fila_total=fila_total,
+            cols_moneda=[7, 8],
+        )
+
+    # 4. Stock por categoría específica (ej: cat_1, cat_2...) o Stock General
+    productos = Producto.objects.select_related("categoria").all()
+    nombre_archivo = "inventario_stock_general"
+    titulo = "Inventario General de Stock"
+
+    if seccion.startswith("cat_"):
+        cat_id = seccion.replace("cat_", "")
+        if cat_id.isdigit():
+            categoria = Categoria.objects.filter(id=int(cat_id)).first()
+            if categoria:
+                productos = productos.filter(categoria=categoria)
+                nombre_archivo = f"stock_{categoria.nombre.lower()}"
+                titulo = f"Inventario de Stock - Categoría {categoria.nombre}"
+
+    encabezados = ["ID", "Producto", "Categoría", "Precio Unitario CLP", "Stock Disponible", "Valorizado CLP"]
+    filas = []
+    suma_stock = 0
+    suma_valorizado = 0
+
+    for p in productos:
+        nombre_cat = p.categoria.nombre if p.categoria else "Sin categoría"
+        valorizado = p.precio * p.stock
+        filas.append([p.id, p.nombre, nombre_cat, p.precio, p.stock, valorizado])
+        suma_stock = suma_stock + p.stock
+        suma_valorizado = suma_valorizado + valorizado
+
+    fila_total = ["TOTAL GENERAL", f"{len(filas)} productos", "—", "—", suma_stock, suma_valorizado]
+    return generar_respuesta_xls(
+        nombre_archivo,
+        titulo,
+        encabezados,
+        filas,
+        fila_total=fila_total,
+        cols_moneda=[4, 6],
+    )
+
+
+
 
 
